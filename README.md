@@ -1,0 +1,2 @@
+# DotCom
+Generational wealth
