@@ -107,6 +107,8 @@ function buildQrSvg(string $token): string {
       <a href="student_dashboard.php#qr" class="menu-item">📷 My QR Code</a>
       <a href="student_dashboard.php#att" class="menu-item">📋 My Attendance</a>
       <a href="study_materials.php"  class="menu-item">📚 Study Materials</a>
+      <a href="student_payments.php" class="menu-item">💳 Payments</a>
+      <a href="my_readiness.php"     class="menu-item">🤖 My Readiness</a>
       <a href="change_password.php"  class="menu-item">🔒 Change Password</a>
       <a href="logout.php"           class="menu-item">🚪 Logout</a>
     </div>
