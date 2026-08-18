@@ -1,0 +1,19 @@
+services:
+- type: web
+name: dotcom-driving-school
+runtime: docker
+repo: https://github.com/YOUR_GITHUB_USERNAME/dotcom-driving-school
+branch: main
+dockerfilePath: ./Dockerfile
+envVars:
+- key: DB_HOST
+sync: false # You paste this in Render dashboard
+- key: DB_PORT
+value: "3306"
+- key: DB_USER
+sync: false
+- key: DB_PASS
+sync: false
+- key: DB_NAME
+value: dotcom_driving_school
+autoDeploy: true
