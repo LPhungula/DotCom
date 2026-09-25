@@ -2,9 +2,13 @@
 require_once 'includes/db.php';
 require_admin();
 
+// Filter by course
 $filter_course = trim($_GET['course'] ?? '');
+
+// Get courses list
 $courses_list = $conn->query("SELECT CourseName FROM courses ORDER BY CourseName");
 
+// Build students query
 $where = $filter_course ? "WHERE s.CourseType = '" . $conn->real_escape_string($filter_course) . "'" : '';
 $students_q = $conn->query("
     SELECT s.StudentID, s.FirstName, s.LastName, s.CourseType,
@@ -15,6 +19,7 @@ $students_q = $conn->query("
     ORDER BY s.FirstName
 ");
 
+// Handle specific student QR
 $selected_student = null;
 if (isset($_GET['student_id'])) {
     $sid = (int)$_GET['student_id'];
@@ -40,8 +45,6 @@ function buildQrSvg(string $token, int $px=140): string {
     return "<svg viewBox='0 0 $size $size' xmlns='http://www.w3.org/2000/svg' style='width:{$px}px;height:{$px}px;display:block;'>
       <rect width='$size' height='$size' fill='#fff'/>{$cells}{$fp}</svg>";
 }
-
-$page_title = 'Generate QR Codes';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -51,6 +54,11 @@ $page_title = 'Generate QR Codes';
   <title>Generate QR Codes — Dot Com Driving School</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
+    body{padding-top:var(--nav-h);}
+    .admin-navbar{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,0.25);}
+    .admin-navbar .dot-com{color:var(--red);font-family:'Syne',sans-serif;font-size:16px;font-weight:800;display:block;}
+    .admin-navbar .school{color:rgba(255,255,255,0.5);font-size:10px;letter-spacing:.5px;}
+    .qr-main{margin-left:var(--sidebar-w);padding:2rem;}
     .qr-filter{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem;margin-bottom:1.5rem;display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;}
     .qr-filter .form-group{margin:0;min-width:200px;}
     .qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1.2rem;}
@@ -59,20 +67,33 @@ $page_title = 'Generate QR Codes';
     .qr-name{font-weight:600;font-size:13.5px;margin-top:.8rem;margin-bottom:2px;}
     .qr-course{font-size:11.5px;color:var(--muted);margin-bottom:.9rem;}
     .qr-preview{display:flex;justify-content:center;margin-bottom:.5rem;}
+    /* Modal */
     .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center;}
     .modal.open{display:flex;}
-    .modal-box{background:#fff;border-radius:14px;padding:2.5rem;text-align:center;max-width:360px;width:90%;box-shadow:var(--shadow-lg);position:relative;}
+    .modal-box{background:#fff;border-radius:14px;padding:2.5rem;text-align:center;max-width:360px;width:90%;box-shadow:var(--shadow-lg);}
     .modal-box h3{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:.3rem;}
     .modal-box p{font-size:13px;color:var(--muted);margin-bottom:1.5rem;}
     .modal-qr{display:flex;justify-content:center;margin-bottom:1.5rem;}
     .modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
+    @media(max-width:768px){.qr-main{margin-left:0;}}
   </style>
 </head>
 <body>
-<?php include 'includes/admin_sidebar.php'; ?>
-<?php include 'includes/topbar.php'; ?>
+<nav class="admin-navbar">
+  <div><span class="dot-com">DOT COM</span><span class="school">DRIVING SCHOOL</span></div>
+  <a href="logout.php" class="btn btn-outline btn-sm">Logout</a>
+</nav>
 
-<div class="sb-main">
+<?php include 'includes/admin_sidebar.php'; ?>
+
+<div class="admin-wrapper">
+<div class="qr-main">
+  <div class="page-header">
+    <h1>Generate QR Codes</h1>
+    <p>View and download unique QR codes for each student</p>
+  </div>
+
+  <!-- Filter -->
   <form method="GET" class="qr-filter">
     <div class="form-group">
       <label>Select Course</label>
@@ -90,6 +111,7 @@ $page_title = 'Generate QR Codes';
       <select name="student_id" class="form-control" onchange="this.form.submit()">
         <option value="">All Students</option>
         <?php
+        // Re-fetch for dropdown
         $sd = $conn->query("SELECT StudentID,FirstName,LastName FROM students ORDER BY FirstName");
         if ($sd) while ($s=$sd->fetch_assoc()):?>
           <option value="<?= $s['StudentID'] ?>" <?= (isset($_GET['student_id'])&&$_GET['student_id']==$s['StudentID'])?'selected':'' ?>>
@@ -100,7 +122,9 @@ $page_title = 'Generate QR Codes';
     </div>
   </form>
 
+  <!-- QR Grid -->
   <?php if ($selected_student): ?>
+  <!-- Single student view -->
   <div style="max-width:360px;margin:0 auto;text-align:center;">
     <div class="qr-card" style="padding:2rem;">
       <div class="qr-preview"><?= buildQrSvg($selected_student['QRToken']??'fallback', 160) ?></div>
@@ -129,9 +153,11 @@ $page_title = 'Generate QR Codes';
   </div>
   <?php endif; ?>
 </div>
+</div>
 
+<!-- Modal -->
 <div class="modal" id="qrModal" onclick="if(event.target===this)closeModal()">
-  <div class="modal-box">
+  <div class="modal-box" style="position:relative;">
     <button class="modal-close" onclick="closeModal()">✕</button>
     <h3 id="modal-name"></h3>
     <p id="modal-id"></p>

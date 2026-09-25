@@ -1,12 +1,11 @@
 <?php
 // ── Database Configuration ──
-define('DB_HOST', '127.0.0.1');
+define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'dotcom_driving_school');
-define('DB_PORT', 3307);
 
-$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
+$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
 if ($conn->connect_error) {
     die('<div style="font-family:sans-serif;padding:2rem;background:#fee2e2;color:#991b1b;border-radius:8px;margin:2rem auto;max-width:500px;">
@@ -15,8 +14,7 @@ if ($conn->connect_error) {
         Make sure:<br>
         1. XAMPP is running (Apache + MySQL)<br>
         2. You imported <code>dotcom_db.sql</code> into phpMyAdmin<br>
-        3. Database name is <strong>dotcom_driving_school</strong><br>
-        4. MySQL is running on port <strong>3307</strong>
+        3. Database name is <strong>dotcom_driving_school</strong>
     </div>');
 }
 
